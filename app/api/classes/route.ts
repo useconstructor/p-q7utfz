@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 
-const schema = "CREATE TABLE IF NOT EXISTS classes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, instructor TEXT NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL, capacity INTEGER NOT NULL DEFAULT 20, enrolled INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime(\"now\")))"
+const schema = "CREATE TABLE IF NOT EXISTS classes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, instructor TEXT NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL, capacity INTEGER NOT NULL DEFAULT 20, enrolled INTEGER NOT NULL DEFAULT 0)"
 
 export async function GET() {
   try {
