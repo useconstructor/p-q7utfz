@@ -1,7 +1,58 @@
-export default function Home() {
-  return (
-    <main className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Constructor Template</h1>
-    </main>
-  );
+'use client'
+
+import { FormEvent, useMemo, useState } from 'react'
+import { ArrowRight, BarChart3, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Download, Menu, Plus, Search, ShieldCheck, Sparkles, Users, X, Zap } from 'lucide-react'
+
+type Member = { name:string; email:string; membership:'Premium'|'Basic'; enrollments:number; expiry:string }
+const seed:Member[]=[
+ {name:'Sarah Chen',email:'sarah.chen@email.com',membership:'Premium',enrollments:7,expiry:'Mar 15, 2027'},
+ {name:'Michael Torres',email:'m.torres@mail.com',membership:'Basic',enrollments:2,expiry:'Feb 28, 2027'},
+ {name:'Emma Liu',email:'emma.liu@studio.fit',membership:'Premium',enrollments:12,expiry:'Jun 30, 2027'}]
+const classes=[
+ {day:'MON',date:'18',time:'6:00 AM',name:'Power Yoga',coach:'Marcus',initials:'MW',count:14,max:24,tone:'teal'},
+ {day:'TUE',date:'19',time:'8:30 AM',name:'Morning Spin',coach:'Lena',initials:'LK',count:18,max:20,tone:'amber'},
+ {day:'WED',date:'20',time:'5:30 PM',name:'HIIT Bootcamp',coach:'Sasha',initials:'SR',count:20,max:20,tone:'coral'},
+ {day:'THU',date:'21',time:'12:00 PM',name:'Core Strength',coach:'Daniel',initials:'DA',count:10,max:18,tone:'teal'},
+ {day:'FRI',date:'22',time:'9:00 AM',name:'Pilates Reformer',coach:'Jade',initials:'JP',count:8,max:12,tone:'amber'},
+ {day:'SAT',date:'23',time:'10:30 AM',name:'Flow & Restore',coach:'Amara',initials:'AB',count:9,max:20,tone:'teal'}]
+const stories=[
+ ['FlexClass cut our admin time in half. We can actually run more classes without hiring another staff member.','Marcus Webb','Studio Manager, SoHo Fitness · New York','MW'],
+ ['The capacity management alone saves us from double booking disasters. Every trainer loves it.','Dr. Priya Patel','Head Coach, CoreFit · San Francisco','PP'],
+ ['Member enrollment tracking is seamless. Expiry alerts prevent the awkward renewal conversation.','James Rodriguez','Founder, Momentum Yoga Collective · Austin','JR']]
+const faqs=[
+ ['Can I import my current member list?','Yes. Import a CSV roster or add members individually. Our guided onboarding maps membership and expiry data for you.'],
+ ['How quickly do capacity changes appear?','Enrollment and cancellation changes appear instantly across the schedule, directory, and instructor view.'],
+ ['Does FlexClass work on tablets?','Yes. The workspace adapts for front desk tablets while preserving the weekly schedule and roster controls.'],
+ ['Can instructors have limited access?','Yes. Studio Pro and Elite support role based access for managers, front desk staff, and instructors.']]
+
+function Logo(){return <a href="#top" className="logo"><span><Zap size={17} fill="currentColor"/></span>FlexClass</a>}
+function Capacity({tone,count,max}:{tone:string,count:number,max:number}){return <><div className="bar"><i className={tone} style={{width:`${count/max*100}%`}}/></div><p className="capacity"><b>{count}/{max} spots</b><em className={tone}>{count===max?'FULL':max-count<=3?`${max-count} LEFT`:'OPEN'}</em></p></>}
+function Preview(){return <div className="preview"><div className="previewtop"><Logo/><span>Sep 18 to 23　<span className="avatar">AK</span></span></div><div className="previewbody"><aside><CalendarDays/><Users/><BarChart3/></aside><div><small>LIVE SCHEDULE</small><h3>This week</h3><div className="previewcards">{classes.slice(0,3).map(c=><article key={c.name}><b>{c.day} · {c.time}</b><h4>{c.name}</h4><p>with {c.coach}</p><Capacity {...c}/></article>)}</div><div className="previewstats"><p>Weekly attendance <b>284 <em>↑ 12%</em></b></p><p>Avg. capacity <b>87%</b></p></div></div></div></div>}
+
+export default function Home(){
+ const [menu,setMenu]=useState(false),[query,setQuery]=useState(''),[members,setMembers]=useState(seed),[slide,setSlide]=useState(0),[faq,setFaq]=useState(0)
+ const [status,setStatus]=useState<'idle'|'loading'|'success'|'error'>('idle')
+ const [form,setForm]=useState({name:'',email:'',membership:'Premium' as 'Premium'|'Basic',expiry:''})
+ const filtered=useMemo(()=>members.filter(m=>`${m.name} ${m.email}`.toLowerCase().includes(query.toLowerCase())),[members,query])
+ const nav=[['Platform','#platform'],['Schedule','#schedule'],['Pricing','#pricing'],['Stories','#stories']]
+ async function add(e:FormEvent){e.preventDefault();setStatus('loading');try{const r=await fetch('/api/members',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});if(!r.ok)throw Error();setMembers([{...form,enrollments:0,expiry:new Date(`${form.expiry}T12:00:00`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})},...members]);setForm({name:'',email:'',membership:'Premium',expiry:''});setStatus('success')}catch{setStatus('error')}}
+ return <main id="top">
+  <nav><div className="navinner"><Logo/><div className="desktop links">{nav.map(n=><a key={n[0]} href={n[1]}>{n[0]}</a>)}</div><div className="desktop actions"><a href="#schedule">View demo</a><a className="primary" href="#pricing">Start free trial</a></div><button className="mobile menubtn" onClick={()=>setMenu(!menu)} aria-expanded={menu} aria-label="Toggle menu">{menu?<X/>:<Menu/>}</button></div><div className={`mobilepanel ${menu?'open':''}`}>{nav.map((n,i)=><a onClick={()=>setMenu(false)} style={{transitionDelay:menu?`${i*60}ms`:'0ms'}} key={n[0]} href={n[1]}>{n[0]}</a>)}<a className="primary" href="#pricing">Start free trial</a></div></nav>
+  <section className="hero"><div><span className="eyepill"><Sparkles/>Built for boutique fitness</span><h1>Your studio, <em>perfectly scheduled.</em></h1><p>Manage classes, track members, and never oversell capacity again. One calm workspace for your entire studio.</p><div className="heroactions"><a className="primary" href="#pricing">Start free trial <ArrowRight/></a><a className="secondary" href="#schedule">Explore the workspace</a></div><div className="checks"><span><Check/>No credit card</span><span><Check/>Guided setup</span><span><Check/>Cancel anytime</span></div></div><Preview/></section>
+  <section className="stats">{[['3,200+','studios trust FlexClass'],['47,000+','active members managed'],['98.2%','capacity optimization'],['14 days','average onboarding']].map(x=><div key={x[0]}><b>{x[0]}</b><span>{x[1]}</span></div>)}</section>
+  <section id="platform" className="section"><header className="center"><small>ONE OPERATIONAL WORKSPACE</small><h2>Clarity from first class to last check in</h2><p>Keep your schedule, capacity, members, and studio actions in sync without juggling tabs or spreadsheets.</p></header><div className="bento"><article className="week"><span>Weekly schedule</span><h3>See the whole floor at a glance.</h3><div>{classes.map(c=><aside key={c.day}><b>{c.day}</b><strong>{c.date}</strong><p>{c.name}<small>{c.count}/{c.max}</small></p></aside>)}</div></article><article><i><Zap/></i><h3>Live capacity</h3><p>Green, amber, and coral states show every opening before it becomes a problem.</p><div className="badges"><b>12 open</b><b>2 left</b><b>Full</b></div></article><article className="membertile"><i><Users/></i><h3>Member intelligence</h3><p>Membership, attendance, and renewal context travel together.</p><div><span className="avatar">SC</span><b>Sarah Chen <small>Premium · 7 classes</small></b></div></article></div></section>
+  <section id="schedule" className="section white"><header className="splithead"><div><small>LIVE OPERATIONS</small><h2>Your week, without the guesswork.</h2></div><div><button onClick={()=>document.getElementById('memberform')?.scrollIntoView({behavior:'smooth'})}><Plus/>Create new class</button><button onClick={()=>window.print()}><Download/>Export roster</button></div></header><div className="schedule">{classes.map(c=><article key={c.day}><header><b>{c.day}</b><strong>{c.date}</strong></header><div><p className="time"><Clock3/>{c.time}</p><h3>{c.name}</h3><p className="coach"><span className="avatar">{c.initials}</span>{c.coach}</p><Capacity {...c}/></div></article>)}</div>
+   <div className="operations"><div className="directory"><header><div><h3>Member directory</h3><p>{members.length} active members in this workspace</p></div><label><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search members" aria-label="Search members"/></label></header><div className="tablewrap"><table><thead><tr><th>Member</th><th>Membership</th><th>Attendance</th><th>Expiry</th></tr></thead><tbody>{filtered.map(m=><tr key={m.email}><td><b>{m.name}</b><small>{m.email}</small></td><td><span className={m.membership}>{m.membership}</span></td><td>{m.enrollments} classes this month</td><td>{m.expiry}</td></tr>)}</tbody></table></div></div>
+    <form id="memberform" onSubmit={add}><header><small>QUICK ADD</small><h3>New member</h3></header><label>Full name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Member name"/></label><label>Email address<input required type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="name@example.com"/></label><div><label>Membership<select value={form.membership} onChange={e=>setForm({...form,membership:e.target.value as 'Premium'|'Basic'})}><option>Premium</option><option>Basic</option></select></label><label>Expiry date<input required type="date" value={form.expiry} onChange={e=>setForm({...form,expiry:e.target.value})}/></label></div><button disabled={status==='loading'} className="primary"><Plus/>{status==='loading'?'Adding member…':'Add member'}</button>{status==='success'&&<p className="success">✓ Member added successfully</p>}{status==='error'&&<p className="error">We could not add this member. Please try again.</p>}</form>
+   </div></section>
+  <section id="pricing" className="section"><header className="center"><small>SIMPLE PRICING</small><h2>Room to grow, without surprises.</h2><p>Start with what your studio needs today. Upgrade when your roster does.</p></header><div className="pricing">{[
+   {name:'Studio Starter',price:'$49',desc:'For new studios building a reliable routine.',features:['Up to 100 members','20 classes per week','Email support','Basic reporting']},
+   {name:'Studio Pro',price:'$129',desc:'For growing teams that need the full picture.',features:['Up to 500 members','Unlimited classes','Priority support','Advanced analytics','Member app access','API integrations'],pro:true},
+   {name:'Studio Elite',price:'Custom',desc:'For multi location operations with custom needs.',features:['White label branding','Dedicated account manager','Custom integrations','Staff training','Priority feature requests']}
+  ].map(p=><article className={p.pro?'pro':''} key={p.name}>{p.pro&&<span>Most popular</span>}<h3>{p.name}</h3><p>{p.desc}</p><strong>{p.price}<small>{p.price!=='Custom'&&'/month'}</small></strong><ul>{p.features.map(f=><li key={f}><Check/>{f}</li>)}</ul><a href="#cta">Choose plan</a></article>)}</div></section>
+  <section id="stories" className="section white stories"><div><small>OPERATOR STORIES</small><h2>Built for the people keeping studios moving.</h2><p><button onClick={()=>setSlide((slide+2)%3)} aria-label="Previous story"><ChevronLeft/></button><button onClick={()=>setSlide((slide+1)%3)} aria-label="Next story"><ChevronRight/></button></p></div><figure><b>“</b><blockquote>{stories[slide][0]}</blockquote><figcaption><span className="avatar">{stories[slide][3]}</span><p><strong>{stories[slide][1]}</strong>{stories[slide][2]}</p></figcaption></figure></section>
+  <section className="section faq"><div><small>QUESTIONS, ANSWERED</small><h2>Everything you need to get started.</h2><p>Explore the most common questions from studio operators.</p></div><div>{faqs.map((f,i)=><article key={f[0]}><button onClick={()=>setFaq(faq===i?-1:i)} aria-expanded={faq===i}>{f[0]}<ChevronDown className={faq===i?'rotate':''}/></button><p className={faq===i?'show':''}>{f[1]}</p></article>)}</div></section>
+  <section id="cta" className="cta"><ShieldCheck/><h2>Trade schedule chaos for studio calm.</h2><p>Bring every class, member, and capacity decision into one shared workspace. Your first 14 days are on us.</p><a className="primary" href="#pricing">Start your free trial <ArrowRight/></a></section>
+  <footer><div><Logo/><p>The calm operating system for boutique fitness studios. Schedule clearly, fill classes, and know every member.</p></div><div><b>Product</b><a href="#platform">Platform</a><a href="#schedule">Live schedule</a><a href="#pricing">Pricing</a></div><div><b>Company</b><a href="#stories">Customer stories</a><a href="#top">Back to top</a><a href="mailto:hello@flexclass.com">Email support</a></div><small>© 2026 FlexClass. Built for movement.</small></footer>
+ </main>
 }
